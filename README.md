@@ -1,58 +1,153 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# API GeoJSON Data Permohonan Yogyakarta
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi Laravel yang menyediakan autentikasi berbasis token dan endpoint untuk mengambil data permohonan dalam format GeoJSON. Data spasial dibaca dari tabel `Contoh_Permohonan`; aplikasi ini tidak menyediakan antarmuka peta.
 
-## About Laravel
+## Fitur
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Registrasi dan login pengguna melalui API.
+- Token akses menggunakan Laravel Sanctum.
+- Informasi pengguna yang sedang terautentikasi.
+- Data permohonan sebagai GeoJSON `FeatureCollection`.
+- Pencabutan token saat logout.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Teknologi dan prasyarat
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3 atau lebih baru.
+- Composer.
+- Node.js dan npm untuk membangun aset frontend.
+- SQLite untuk pengembangan autentikasi secara lokal (konfigurasi bawaan).
+- PostgreSQL dengan ekstensi PostGIS untuk endpoint data GeoJSON.
 
-## Learning Laravel
+## Instalasi dan menjalankan aplikasi
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Jalankan perintah berikut dari direktori proyek. Contoh menggunakan PowerShell:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```powershell
+composer install
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+php artisan key:generate
+php artisan migrate --seed
+npm install
+npm run build
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Migrasi menyiapkan tabel Laravel seperti `users` dan `personal_access_tokens`. Seeder membuat akun lokal untuk pengujian:
 
-## Contributing
+| Email           | Kata sandi |
+| --------------- | ---------- |
+| `ma@yusfan.com` | `rahasia`  |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Akun tersebut hanya untuk pengembangan. Jangan gunakan kata sandi contoh ini di lingkungan produksi.
 
-## Code of Conduct
+Untuk menjalankan server pengembangan, Vite, dan worker antrean:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```powershell
+composer run dev
+```
 
-## Security Vulnerabilities
+Aplikasi tersedia di `http://127.0.0.1:8000`. Untuk pengujian tanpa proses Vite atau worker, jalankan `php artisan serve` saja. Jika aset frontend berubah, jalankan `npm run dev` di terminal lain atau bangun ulang dengan `npm run build`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Menyiapkan sumber data GeoJSON
 
-## License
+Konfigurasi bawaan `.env.example` menggunakan SQLite. Konfigurasi itu cukup untuk tabel autentikasi dan migrasi Laravel, tetapi tidak menyediakan tabel spasial yang dibutuhkan `/api/geojson-data`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Untuk menggunakan endpoint GeoJSON:
+
+1. Siapkan server PostgreSQL dengan PostGIS aktif dan tabel `Contoh_Permohonan` tersedia.
+2. Pastikan tabel tersebut memiliki kolom `geom`, `pemohon`, `tgl_surat`, `keterangan`, dan `wadmpr`. Kolom `geom` harus dapat diproses oleh fungsi PostGIS `ST_AsGeoJSON`.
+3. Atur koneksi database di `.env`, misalnya:
+
+    ```dotenv
+    DB_CONNECTION=pgsql
+    DB_HOST=127.0.0.1
+    DB_PORT=5432
+    DB_DATABASE=nama_database
+    DB_USERNAME=nama_pengguna
+    DB_PASSWORD=password_database
+    ```
+
+4. Jalankan migrasi pada database yang dikonfigurasi dengan `php artisan migrate --seed`.
+
+Tabel `Contoh_Permohonan` dan datanya merupakan sumber data eksternal: migrasi dalam proyek ini tidak membuat atau mengisi tabel tersebut. Jangan menaruh kredensial database sungguhan di README atau repositori.
+
+## Panduan API
+
+Semua endpoint menggunakan prefiks `/api`. Kirim dan terima JSON dengan header `Accept: application/json`; permintaan dengan body juga harus mengirim `Content-Type: application/json`.
+
+### 1. Registrasi
+
+`POST /api/register`
+
+Contoh body:
+
+```json
+{
+    "name": "Pengguna",
+    "email": "pengguna@example.com",
+    "password": "password-minimal-8",
+    "password_confirmation": "password-minimal-8"
+}
+```
+
+Respons berhasil berstatus `201` dan berisi `access_token`. Token juga dapat diperoleh dengan login berikutnya.
+
+### 2. Login
+
+`POST /api/login`
+
+```json
+{
+    "email": "bisnis_ma@yusfan.com",
+    "password": "rahasia"
+}
+```
+
+Simpan nilai `access_token` dari respons. Kredensial harus diganti dengan akun yang Anda miliki jika tidak menggunakan seeder lokal.
+
+### 3. Mengakses endpoint yang dilindungi
+
+Sertakan token sebagai bearer token pada header `Authorization`:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+| Metode | Endpoint            | Kegunaan                                                       |
+| ------ | ------------------- | -------------------------------------------------------------- |
+| `GET`  | `/api/user`         | Mengambil data pengguna yang sedang login.                     |
+| `GET`  | `/api/geojson-data` | Mengambil data permohonan sebagai GeoJSON `FeatureCollection`. |
+| `POST` | `/api/logout`       | Mencabut token yang digunakan pada permintaan ini.             |
+
+Contoh permintaan di PowerShell setelah login:
+
+```powershell
+$login = Invoke-RestMethod `
+  -Uri "http://127.0.0.1:8000/api/login" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Headers @{ Accept = "application/json" } `
+  -Body (@{ email = "ma@yusfan.com"; password = "rahasia" } | ConvertTo-Json)
+
+$headers = @{
+  Accept = "application/json"
+  Authorization = "Bearer $($login.access_token)"
+}
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/geojson-data" -Headers $headers
+```
+
+GeoJSON mengembalikan properti `Pemohon`, `Tgl_Surat`, `Keterangan`, dan `WADMPR` untuk setiap fitur. Endpoint ini memerlukan token yang valid serta koneksi ke tabel spasial yang sudah disiapkan.
+
+## Pengujian
+
+Jalankan pengujian aplikasi dengan:
+
+```powershell
+php artisan test
+```
+
+## Catatan keamanan
+
+- Jangan unggah `.env` atau membagikan token akses.
+- Gunakan `APP_DEBUG=false`, kredensial kuat, dan konfigurasi database yang aman di produksi.
+- Kata sandi contoh dari seeder hanya untuk lingkungan lokal.
