@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class gisdataModel extends Model
 {
-    protected $table = 'data';
+    protected $table = 'Contoh_Permohonan';
     // protected $guarded = ['id'];
 
     public function geojson_data()
