@@ -24,10 +24,10 @@ class ApiController extends Controller
                 'type' => 'Feature',
                 'geometry' => json_decode($data->geom),
                 'properties' => [
-                    'Pemohon' => $data->Pemohon,
-                    'Tgl_Surat' => $data->Tgl_Surat,
-                    'Keterangan' => $data->Keterangan,
-                    'WADMPR' => $data->WADMPR,
+                    'Pemohon' => $data->pemohon,
+                    'Tgl_Surat' => $data->tgl_surat,
+                    'Keterangan' => $data->keterangan,
+                    'WADMPR' => $data->wadmpr,
                 ]
             ];
         }

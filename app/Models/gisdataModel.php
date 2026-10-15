@@ -12,7 +12,7 @@ class gisdataModel extends Model
     public function geojson_data()
     {
         return $this
-            ->selectRaw('st_asgeojson(geom) as geom, "Pemohon", "Tgl_Surat", "Keterangan", "WADMPR"')
+            ->selectRaw('st_asgeojson(geom) as geom, "pemohon", "tgl_surat", "keterangan", "wadmpr"')
             ->get();
     }
 }
